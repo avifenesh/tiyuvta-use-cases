@@ -38,7 +38,7 @@ That is the hosted prefix (`Query:` plus a space). It is not an embeddings JSON 
 
 **A `429` is retryable.** Embed and rerank publish a backoff loop. Retry; nothing is charged for the shed request. That is the client contract on the model pages.
 
-**GLM cannot do structured output.** `response_format` is refused on `zai/glm-5.3-flash`, and reasoning cannot be turned off there (a `none` effort is a `400`). The answer call below uses GLM. The write-back call uses `qwen/qwen3.8-27b`, which enforces JSON during decoding. GLM also bills reasoning as output: a small `max_tokens` can return empty `content`. Keep the cap in the thousands.
+**Reasoning is output.** GLM bills thinking tokens as completion. A small `max_tokens` can return empty `content`. Keep the cap in the thousands. `response_format` works on this model the same as on the rest of the chat roster.
 
 **Do not invent a second vendor.** Point the OpenAI SDK at `https://api.tiyuvta.ai/v1`. Embeddings speak the OpenAI embeddings schema. Rerank is Cohere-shaped, so that one call is raw HTTP.
 
@@ -196,20 +196,17 @@ curl https://api.tiyuvta.ai/v1/rerank \
 
 ## Write-back
 
-After a turn, ask a model that actually enforces JSON for facts worth keeping, then embed those strings the same way you stored the seed facts. Skip this if the turn was a lookup. A memory store that writes every reply back will remember its own hallucinations.
-
-Do not send `response_format` to GLM. This call uses Qwen3.8, and turns reasoning off so a 256-token cap is not spent thinking.
+After a turn, ask GLM for facts worth keeping as JSON, then embed those strings the same way you stored the seed facts. Skip this if the turn was a lookup. A memory store that writes every reply back will remember its own hallucinations.
 
 ```python
 extract = chat.chat.completions.create(
-    model="qwen/qwen3.8-27b",
+    model="zai/glm-5.3-flash",
     messages=[
         {"role": "system", "content": "Return JSON {\"facts\":[...]} of durable user or world facts from this turn. Empty list if none."},
         {"role": "user", "content": f"User: {user}\nAssistant: {reply}"},
     ],
     response_format={"type": "json_object"},
-    extra_body={"reasoning_effort": "none"},
-    max_tokens=256,
+    max_tokens=2048,
 )
 ```
 

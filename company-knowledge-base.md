@@ -14,7 +14,7 @@ This does not host your documents. The files stay where you put them. The endpoi
 |---|---|---|
 | Embed | `qwen/qwen3-embedding-8b` | Prompt window 32,768 tokens. Index at `dimensions: 1024` unless you have a reason for 4096. |
 | Rerank | `qwen/qwen3-reranker-8b` | Same prompt window per query+document pair. `instruction` names the corpus. |
-| Arrange + answer | `qwen/qwen3.8-27b` | The middle of the curve: enough depth to file and cite, still one request. `response_format` is enforced here. Use `stepfun/step-3.7-flash` if the paper is the work; Step cannot turn reasoning off, so do not use it for the JSON filing pass. |
+| Arrange + answer | `qwen/qwen3.8-27b` | The middle of the curve: enough depth to file and cite, still one request. `response_format` is enforced here. Use `stepfun/step-3.7-flash` if the paper is the work, and raise `max_tokens` so reasoning does not eat the JSON. |
 
 PDF bytes are not an API input. Extract text on your side (`pdftotext`, your parser) and ingest the `.txt`. A snippet that pretends the endpoint reads PDFs would be a lie.
 
@@ -56,7 +56,7 @@ db.commit()
 
 ## Arrange
 
-One pass per file, not per chunk. Send a short extract (filename + first chunk) and ask for JSON. `response_format` is enforced during decoding on Qwen3.8. Turn reasoning off so the token budget is not spent thinking. Do not send this call to GLM: it refuses `response_format`.
+One pass per file, not per chunk. Send a short extract (filename + first chunk) and ask for JSON. `response_format` is enforced during decoding. Turn reasoning off on Qwen so the token budget is not spent thinking. GLM takes `response_format` too; keep a large `max_tokens` there because reasoning still bills as output.
 
 ```python
 ARRANGE = """You file a company corpus. Return JSON:

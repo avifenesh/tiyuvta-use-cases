@@ -80,7 +80,7 @@ def answer(db: sqlite3.Connection, user: str) -> str:
 
 def write_back(db: sqlite3.Connection, user: str, reply: str) -> None:
     r = chat().chat.completions.create(
-        model="qwen/qwen3.8-27b",
+        model="zai/glm-5.3-flash",
         messages=[
             {
                 "role": "system",
@@ -89,8 +89,7 @@ def write_back(db: sqlite3.Connection, user: str, reply: str) -> None:
             {"role": "user", "content": f"User: {user}\nAssistant: {reply}"},
         ],
         response_format={"type": "json_object"},
-        extra_body={"reasoning_effort": "none"},
-        max_tokens=256,
+        max_tokens=2048,
     )
     raw = r.choices[0].message.content or "{}"
     facts = json.loads(raw).get("facts") or []
