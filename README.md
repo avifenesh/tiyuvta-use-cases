@@ -15,4 +15,4 @@ python knowledge_base.py ingest
 python knowledge_base.py ask "What is our prepaid billing rule?"
 ```
 
-These are working shapes, not a recall bake-off. Embed/rerank retry a `429`. GLM runs the memory loop, including JSON write-back. Qwen3.8 files the knowledge base with reasoning off.
+These are working shapes, not a recall bake-off. Embed/rerank retry a `429`. Qwen3.8 27B runs the memory loop and the knowledge-base filing. Embed and rerank are Qwen3 8B. One family, one key.

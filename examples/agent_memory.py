@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local SQLite memory over tiyuvta embed + rerank + GLM."""
+"""Local SQLite memory over tiyuvta embed + rerank + Qwen 27B."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def remember(db: sqlite3.Connection, user: str, k: int = 20, n: int = 5) -> list
 def answer(db: sqlite3.Connection, user: str) -> str:
     memories = remember(db, user)
     r = chat().chat.completions.create(
-        model="zai/glm-5.3-flash",
+        model="qwen/qwen3.8-27b",
         messages=[
             {
                 "role": "system",
@@ -73,14 +73,15 @@ def answer(db: sqlite3.Connection, user: str) -> str:
                 + user,
             },
         ],
-        max_tokens=2048,
+        extra_body={"reasoning_effort": "none"},
+        max_tokens=1024,
     )
     return r.choices[0].message.content or ""
 
 
 def write_back(db: sqlite3.Connection, user: str, reply: str) -> None:
     r = chat().chat.completions.create(
-        model="zai/glm-5.3-flash",
+        model="qwen/qwen3.8-27b",
         messages=[
             {
                 "role": "system",
@@ -89,7 +90,8 @@ def write_back(db: sqlite3.Connection, user: str, reply: str) -> None:
             {"role": "user", "content": f"User: {user}\nAssistant: {reply}"},
         ],
         response_format={"type": "json_object"},
-        max_tokens=2048,
+        extra_body={"reasoning_effort": "none"},
+        max_tokens=256,
     )
     raw = r.choices[0].message.content or "{}"
     facts = json.loads(raw).get("facts") or []
