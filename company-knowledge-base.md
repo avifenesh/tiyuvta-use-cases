@@ -116,21 +116,11 @@ def ask(question, k=20, n=6):
         "instruction": RERANK_INSTRUCT,
         "return_documents": True,
     })
-    # Same as the memory page: request published, response keys not on the docs page.
-    results = data.get("results", [])
+    # Live body: results[].index, relevance_score, document.text. Already sorted.
     hits = []
-    if isinstance(results, list) and results and isinstance(results[0], dict):
-        for hit in results:
-            if "index" in hit:
-                path, start, text = ranked[hit["index"]][1:]
-            else:
-                path, start, text = ranked[len(hits)][1:]
-            hits.append({"path": path, "start": start, "text": text})
-    else:
-        hits = [
-            {"path": path, "start": start, "text": text}
-            for _, path, start, text in ranked[:n]
-        ]
+    for hit in data["results"]:
+        path, start, text = ranked[hit["index"]][1:]
+        hits.append({"path": path, "start": start, "text": text, "score": hit["relevance_score"]})
     cited = "\n\n".join(
         f"[{i}] {h['path']}@{h['start']}\n{h['text']}" for i, h in enumerate(hits, 1)
     )

@@ -69,9 +69,7 @@ def cosine(a: list[float], b: list[float]) -> float:
 def rerank_order(query: str, documents: list[str], instruction: str, top_n: int) -> list[int]:
     """Return indexes into `documents` in rerank order.
 
-    Request shape is published. Response keys are not on the docs page.
-    The route is advertised Cohere-shaped; this accepts that body and
-    falls back to the original order if the keys are absent.
+    Live body (2026-09-03): {results:[{index, relevance_score, document:{text}}], usage}.
     """
     if not documents:
         return []

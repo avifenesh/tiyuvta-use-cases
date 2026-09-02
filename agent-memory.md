@@ -127,22 +127,8 @@ def remember(user, k=20, n=5):
         "instruction": RERANK_INSTRUCT,
         "return_documents": True,
     })
-    # Request shape is published. Response keys are not on the docs page.
-    # The route is advertised Cohere-shaped: results already sorted, top_n trimmed.
-    # Print one live body against your key before you depend on a field name.
-    results = data.get("results", data)
-    if isinstance(results, list) and results and isinstance(results[0], dict):
-        out = []
-        for hit in results:
-            doc = hit.get("document")
-            if isinstance(doc, dict) and doc.get("text"):
-                out.append(doc["text"])
-            elif isinstance(doc, str):
-                out.append(doc)
-            elif "index" in hit:
-                out.append(docs[hit["index"]])
-        return out
-    return docs[:n]
+    # Live body: results[].index, relevance_score, document.text. Already sorted.
+    return [docs[hit["index"]] for hit in data["results"]]
 
 def answer(user):
     memories = remember(user)
