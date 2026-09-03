@@ -1,12 +1,14 @@
 # Use cases
 
-Land, copy a snippet, take a key, build. Every example uses the live roster on one prepaid balance: embed, rerank, then a chat model. No product-specific SDK to remove later.
+Things a business can actually build on this endpoint. One key. Same bill. You do not need a second AI vendor, and you do not need a research team to start.
 
-These are working shapes, not benchmarks. Throughput on embed and rerank is best-effort by contract (retry a `429`). Generation numbers live on the [model pages](/model), each with its curl.
+Start with work that is already on the desk: a rough email, meeting notes, a brief. More pages will land here the same way. A problem a company has, a page you can read, a key you can take, a thing you can run.
 
-| Use case | What you build | Models |
-|---|---|---|
-| [Agent memory](./agent-memory.md) | Remember facts across turns: embed once, retrieve, rerank, answer | `qwen/qwen3-embedding-8b` · `qwen/qwen3-reranker-8b` · `zai/glm-5.3-flash` |
-| [Company knowledge base](./company-knowledge-base.md) | Ingest papers and notes, let the model file them, then ask with citations | `qwen/qwen3-embedding-8b` · `qwen/qwen3-reranker-8b` · `qwen/qwen3.8-27b` |
+| | |
+|---|---|
+| [Write the work](/use-cases/work-writing) | Rewrite an email, turn notes into decisions and actions, or make a rough brief into structured JSON. GLM-5.3-Flash is the cheapest model on the roster, and the strongest we serve. |
+| [Give your tools a memory](/use-cases/agent-memory) | Notes, decisions, and "we already decided this," recalled before the model answers. Built with Qwen. |
+| Put GLM on the desk | Coming next. Tickets, policy, a reply or a handoff. |
+| Company knowledge base | Coming later. File your papers, then ask with the path attached. |
 
-Get an [API key](/login). Base URL `https://api.tiyuvta.ai/v1`. Export `TIYUVTA_KEY`.
+[Get an API key](/login) · [See the models](/model)
