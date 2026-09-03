@@ -1,4 +1,4 @@
-# LinkedIn : after the page is live
+# LinkedIn: post only after the page is live
 
 Do not post until https://inference.tiyuvta.ai/use-cases/work-writing is live.
 Unique tag for this post only: c=li-glm-writing
