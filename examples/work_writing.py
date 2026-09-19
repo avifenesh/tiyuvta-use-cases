@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rewrite work text, summarize notes, or structure a rough brief with GLM."""
+"""Rewrite work text, summarize notes, or structure a rough brief with DeepSeek-V4.1-Flash on the tiyuvta trial endpoint."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ import sys
 
 from openai import OpenAI
 
-from client import BASE, key
+from client import BASE, CHAT_MODEL, key
 
-MODEL = "zai/glm-5.3-flash"
+MODEL = CHAT_MODEL
 MAX_TOKENS = 8192
 
 SYSTEMS = {

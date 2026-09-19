@@ -8,7 +8,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from client import chat, cosine, embed, rerank_order
+from client import CHAT_MODEL, chat, cosine, embed, rerank_order
 
 CHUNK, OVERLAP = 3000, 400
 SUFFIXES = {".md", ".txt", ".markdown"}
@@ -81,7 +81,7 @@ def arrange(db: sqlite3.Connection) -> None:
             "select text from chunk where path=? order by start limit 1", (path,)
         ).fetchone()[0]
         r = c.chat.completions.create(
-            model="qwen/qwen3.8-27b",
+            model=CHAT_MODEL,
             messages=[
                 {"role": "system", "content": ARRANGE},
                 {"role": "user", "content": f"filename: {path}\n\n{first[:4000]}"},
@@ -121,7 +121,7 @@ def ask(db: sqlite3.Connection, question: str, k: int = 20, n: int = 6) -> str:
         f"[{i}] {path}@{start}\n{text}" for i, (path, start, text) in enumerate(hits, 1)
     )
     r = chat().chat.completions.create(
-        model="qwen/qwen3.8-27b",
+        model=CHAT_MODEL,
         messages=[
             {
                 "role": "system",

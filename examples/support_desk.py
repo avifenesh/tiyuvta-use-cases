@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A tiny support desk. GLM looks up orders and policy, then answers or escalates.
+"""A tiny support desk. DeepSeek-V4.1-Flash (tiyuvta trial endpoint) looks up orders and policy, then answers or escalates.
 
 The store is local. The endpoint only sees the text and tool results you send.
 """
@@ -9,9 +9,9 @@ from __future__ import annotations
 import json
 import sys
 
-from client import chat
+from client import CHAT_MODEL, chat
 
-MODEL = "zai/glm-5.3-flash"
+MODEL = CHAT_MODEL
 
 ORDERS = {
     "A1842": {"status": "shipped", "item": "prepaid inference credit", "eta": "Thursday"},

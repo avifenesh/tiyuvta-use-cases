@@ -1,4 +1,4 @@
 # Engine note (example data)
 
-memra is a Rust + CUDA inference engine. The hosted product at inference.tiyuvta.ai runs it.
-Avi Fenesh builds both. This file exists so the knowledge-base example has more than one path to cite.
+tiyuvta is a research lab that deploys open-source frontier models on hardware you can afford: model choice, fine-tuning, architecture and serving-engine work, cloud setup when wanted.
+Avi Fenesh runs it. This file exists so the knowledge-base example has more than one path to cite.

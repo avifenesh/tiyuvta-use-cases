@@ -1,14 +1,10 @@
 # Use cases
 
-Things a business can actually build on this endpoint. One key. Same bill. You do not need a second AI vendor, and you do not need a research team to start.
+Working shapes for two things tiyuvta does: the model it serves itself as a proof you can test your workload against (DeepSeek-V4.1-Flash, the trial endpoint at api.tiyuvta.ai), and the models it deploys on your own hardware (here: an embedder and a reranker for retrieval). No product SDK; every call is the OpenAI-compatible shape.
 
-Start with work that is already on the desk: a rough email, meeting notes, a brief. More pages will land here the same way. A problem a company has, a page you can read, a key you can take, a thing you can run.
-
-| | |
-|---|---|
-| [Write the work](/use-cases/work-writing) | Rewrite an email, turn notes into decisions and actions, or make a rough brief into structured JSON. GLM-5.3-Flash is the cheapest model on the roster, and the strongest we serve. |
-| [Give your tools a memory](/use-cases/agent-memory) | Notes, decisions, and "we already decided this," recalled before the model answers. Built with Qwen. |
-| Put GLM on the desk | Coming next. Tickets, policy, a reply or a handoff. |
-| Company knowledge base | Coming later. File your papers, then ask with the path attached. |
-
-[Get an API key](/login) · [See the models](/model)
+| | Runs on | |
+|---|---|---|
+| [Write the work](./examples/work_writing.py) | trial endpoint | Rewrite an email, turn notes into decisions and actions, or make a rough brief into structured JSON. |
+| [Support desk](./examples/support_desk.py) | trial endpoint | Tool calls: look up an order and the policy, answer or escalate. |
+| [Agent memory](./agent-memory.md) | your deployment + trial endpoint | Notes, decisions, and "we already decided this," recalled before the model answers. |
+| [Company knowledge base](./company-knowledge-base.md) | your deployment + trial endpoint | File your papers, then ask with the path attached. |

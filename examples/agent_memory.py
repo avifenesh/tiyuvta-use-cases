@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local SQLite memory over tiyuvta embed + rerank + Qwen 27B."""
+"""Local SQLite memory: embed + rerank on YOUR deployment, the answer from DeepSeek-V4.1-Flash on the tiyuvta trial endpoint."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import sqlite3
 import sys
 from pathlib import Path
 
-from client import chat, cosine, embed, rerank_order
+from client import CHAT_MODEL, chat, cosine, embed, rerank_order
 
 QUERY_INSTRUCT = (
     "Instruct: Retrieve stored memories that help answer this user message\nQuery: "
@@ -17,9 +17,9 @@ RERANK_INSTRUCT = (
     "Given a user message, retrieve stored memories that are useful for answering it"
 )
 SEED = [
-    "Avi Fenesh builds memra, a Rust + CUDA inference engine, and operates inference.tiyuvta.ai.",
+    "Avi Fenesh runs tiyuvta, a research lab that deploys open-source frontier models on hardware you can afford.",
     "Prepaid credit does not expire. There is no subscription and no minimum.",
-    "Embed and rerank share the same API key as chat. They bill input tokens only.",
+    "Embed and rerank run on your own hardware; the chat model runs on the tiyuvta trial endpoint.",
 ]
 
 
@@ -56,7 +56,7 @@ def remember(db: sqlite3.Connection, user: str, k: int = 20, n: int = 5) -> list
 def answer(db: sqlite3.Connection, user: str) -> str:
     memories = remember(db, user)
     r = chat().chat.completions.create(
-        model="qwen/qwen3.8-27b",
+        model=CHAT_MODEL,
         messages=[
             {
                 "role": "system",
@@ -81,7 +81,7 @@ def answer(db: sqlite3.Connection, user: str) -> str:
 
 def write_back(db: sqlite3.Connection, user: str, reply: str) -> None:
     r = chat().chat.completions.create(
-        model="qwen/qwen3.8-27b",
+        model=CHAT_MODEL,
         messages=[
             {
                 "role": "system",

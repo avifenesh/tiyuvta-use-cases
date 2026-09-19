@@ -1,8 +1,8 @@
 # Agent memory
 
-A loop that actually remembers. You write facts into a local store as vectors, then every later turn retrieves the nearest ones, reranks them, and only then asks the model. One key covers all three calls.
+A loop that actually remembers. You write facts into a local store as vectors, then every later turn retrieves the nearest ones, reranks them, and only then asks the model. Two endpoints: the embedder and reranker run on your own hardware (models tiyuvta deploys for you), the chat model is DeepSeek-V4.1-Flash on the tiyuvta trial endpoint.
 
-This is not a hosted memory product. The store is yours (SQLite in the snippet). The endpoint supplies the three models a retrieval stack needs: embed, rerank, generate.
+This is not a hosted memory product. The store is yours (SQLite in the snippet). The trial endpoint supplies the chat model; the two retrieval models are what a tiyuvta deployment puts on your cards (Qwen3-Embedding-8B, Qwen3-Reranker-8B), behind the same OpenAI-compatible shapes shown here. Until you have that deployment, `examples/agent_memory.py` stops with a message instead of calling an endpoint that does not exist.
 
 ## The stack
 
@@ -11,15 +11,15 @@ This is not a hosted memory product. The store is yours (SQLite in the snippet).
 3. **Rerank.** Send those *k* to the reranker with a task instruction. Keep the top *n*.
 4. **Answer.** Put the surviving memories in the prompt. Generate. Optionally write new facts back.
 
-Same key, same balance. Embed and rerank bill input only. Chat bills in and out.
+Set `RETRIEVAL_BASE_URL` (and `RETRIEVAL_KEY` if your deployment needs one) for embed and rerank; `TIYUVTA_KEY` for the chat model.
 
 | Role | Model id | Why this one |
 |---|---|---|
-| Embed | `qwen/qwen3-embedding-8b` | Native 4096-d, MRL-truncatable. Site default example uses `dimensions: 1024`. |
-| Rerank | `qwen/qwen3-reranker-8b` | Scores 0–1, sorted. Pass `instruction` for the task. |
-| Generate | `zai/glm-5.3-flash` | Cheapest chat model on the roster, built for agent loops. Swap the id if you want Ornith’s pace or Qwen’s depth. |
+| Embed (your deployment) | `qwen/qwen3-embedding-8b` | Native 4096-d, MRL-truncatable. The example uses `dimensions: 1024`. |
+| Rerank (your deployment) | `qwen/qwen3-reranker-8b` | Scores 0–1, sorted. Pass `instruction` for the task. |
+| Generate (tiyuvta trial endpoint) | `deepseek-ai/deepseek-v4.1-flash` | The one model tiyuvta serves itself, as the proof you can test your workload against. |
 
-Ids are live names from `GET /v1/models`. A wrong id is a `400`, not a guess.
+Ids are live names from each endpoint's `GET /v1/models`. A wrong id is a `400`, not a guess.
 
 ## What you must get right
 
@@ -38,7 +38,7 @@ That is the hosted prefix (`Query:` plus a space). It is not an embeddings JSON 
 
 **A `429` is retryable.** Embed and rerank publish a backoff loop. Retry; nothing is charged for the shed request. That is the client contract on the model pages.
 
-**Reasoning is output.** GLM bills thinking tokens as completion. A small `max_tokens` can return empty `content`. Keep the cap in the thousands. `response_format` works on this model the same as on the rest of the chat roster.
+**Reasoning is output.** DeepSeek-V4.1-Flash bills thinking tokens as completion. A small `max_tokens` can return empty `content`. Keep the cap in the thousands. `response_format` works on this model.
 
 **Do not invent a second vendor.** Point the OpenAI SDK at `https://api.tiyuvta.ai/v1`. Embeddings speak the OpenAI embeddings schema. Rerank is Cohere-shaped, so that one call is raw HTTP.
 
@@ -85,9 +85,9 @@ db = sqlite3.connect("memory.sqlite")
 db.execute("create table if not exists mem (id integer primary key, text text, vec text)")
 
 facts = [
-    "Avi Fenesh builds memra, a Rust + CUDA inference engine, and operates inference.tiyuvta.ai.",
+    "Avi Fenesh runs tiyuvta, a research lab that deploys open-source frontier models on hardware you can afford.",
     "Prepaid credit does not expire. There is no subscription and no minimum.",
-    "Embed and rerank share the same API key as chat. They bill input tokens only.",
+    "Embed and rerank run on your own hardware; the chat model runs on the tiyuvta trial endpoint.",
 ]
 for text, vec in zip(facts, embed(facts)):
     db.execute("insert into mem(text, vec) values (?, ?)", (text, json.dumps(vec)))
@@ -149,7 +149,7 @@ def answer(user):
         },
     ]
     return chat.chat.completions.create(
-        model="zai/glm-5.3-flash",
+        model="deepseek-ai/deepseek-v4.1-flash",
         messages=messages,
         max_tokens=2048,
     ).choices[0].message.content
@@ -173,20 +173,20 @@ curl https://api.tiyuvta.ai/v1/rerank \
   -H "Authorization: Bearer $TIYUVTA_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"qwen/qwen3-reranker-8b",
-       "query":"Who runs the hosted endpoint?",
+       "query":"Who runs tiyuvta?",
        "instruction":"Given a user message, retrieve stored memories that are useful for answering it",
-       "documents":["Avi Fenesh builds memra and operates inference.tiyuvta.ai.",
+       "documents":["Avi Fenesh runs tiyuvta, a research lab that deploys open-source frontier models on hardware you can afford.",
                     "Prepaid credit does not expire."],
        "top_n":3}'
 ```
 
 ## Write-back
 
-After a turn, ask GLM for facts worth keeping as JSON, then embed those strings the same way you stored the seed facts. Skip this if the turn was a lookup. A memory store that writes every reply back will remember its own hallucinations.
+After a turn, ask the chat model for facts worth keeping as JSON, then embed those strings the same way you stored the seed facts. Skip this if the turn was a lookup. A memory store that writes every reply back will remember its own hallucinations.
 
 ```python
 extract = chat.chat.completions.create(
-    model="zai/glm-5.3-flash",
+    model="deepseek-ai/deepseek-v4.1-flash",
     messages=[
         {"role": "system", "content": "Return JSON {\"facts\":[...]} of durable user or world facts from this turn. Empty list if none."},
         {"role": "user", "content": f"User: {user}\nAssistant: {reply}"},
@@ -204,6 +204,5 @@ Vectors for the same `(input, dimensions)` pair are deterministic (byte-for-byte
 
 ## Next
 
-- Model cards: [Qwen3-Embedding-8B](/models/qwen3-embedding-8b), [Qwen3-Reranker-8B](/models/qwen3-reranker-8b), [GLM-5.3-Flash](/models/glm-5-3-flash), [Qwen3.8 27B](/models/qwen3-8)
 - [Company knowledge base](./company-knowledge-base.md) — the same three calls, pointed at a corpus of papers
-- [Quickstart](/quickstart) · [Docs](/docs) · [Integrations](/integrations)
+- [Try the deployment](https://tiyuvta.ai/services/try/) · [What tiyuvta deploys on your hardware](https://tiyuvta.ai/services/)

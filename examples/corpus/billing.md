@@ -1,5 +1,5 @@
 # Billing (example data, not a real policy)
 
 Prepaid credit does not expire. There is no subscription and no minimum.
-Embedding and rerank calls bill input tokens only, on the same key as chat.
-A retryable 429 on those two routes is not billed.
+The trial endpoint serves one chat model; embedding and rerank run on the customer's own deployment.
+A retryable 429 is not billed.

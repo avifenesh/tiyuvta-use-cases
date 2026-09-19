@@ -1,8 +1,8 @@
 # Company knowledge base
 
-Drop a folder of papers and notes on disk. The embedder indexes them. The chat model proposes a filing scheme (topic, owner, status) and writes it back as metadata. Later questions retrieve, rerank, and answer with the file path attached. Same three models, same key, as [agent memory](./agent-memory.md).
+Drop a folder of papers and notes on disk. The embedder indexes them. The chat model proposes a filing scheme (topic, owner, status) and writes it back as metadata. Later questions retrieve, rerank, and answer with the file path attached. Same split as [agent memory](./agent-memory.md): the embedder and reranker run on your own hardware (models tiyuvta deploys for you), the chat model is DeepSeek-V4.1-Flash on the tiyuvta trial endpoint.
 
-This does not host your documents. The files stay where you put them. The endpoint never sees a file path, only the text you send.
+This does not host your documents. The files stay where you put them. Neither endpoint sees a file path, only the text you send. Set `RETRIEVAL_BASE_URL` to your deployment for embed and rerank; without it `examples/knowledge_base.py` stops with a message.
 
 ## The stack
 
@@ -12,11 +12,11 @@ This does not host your documents. The files stay where you put them. The endpoi
 
 | Role | Model id | Why this one |
 |---|---|---|
-| Embed | `qwen/qwen3-embedding-8b` | Prompt window 32,768 tokens. Index at `dimensions: 1024` unless you have a reason for 4096. |
-| Rerank | `qwen/qwen3-reranker-8b` | Same prompt window per query+document pair. `instruction` names the corpus. |
-| Arrange + answer | `qwen/qwen3.8-27b` | The middle of the curve: enough depth to file and cite, still one request. `response_format` is enforced here. Use `stepfun/step-3.7-flash` if the paper is the work, and raise `max_tokens` so reasoning does not eat the JSON. |
+| Embed (your deployment) | `qwen/qwen3-embedding-8b` | Prompt window 32,768 tokens. Index at `dimensions: 1024` unless you have a reason for 4096. |
+| Rerank (your deployment) | `qwen/qwen3-reranker-8b` | Same prompt window per query+document pair. `instruction` names the corpus. |
+| Arrange + answer (tiyuvta trial endpoint) | `deepseek-ai/deepseek-v4.1-flash` | Enough depth to file and cite in one request; `response_format` is enforced. Raise `max_tokens` so reasoning does not eat the JSON. |
 
-PDF bytes are not an API input. Extract text on your side (`pdftotext`, your parser) and ingest the `.txt`. A snippet that pretends the endpoint reads PDFs would be a lie.
+PDF bytes are not an API input. Extract text on your side (`pdftotext`, your parser) and ingest the `.txt`. A snippet that pretends an endpoint reads PDFs would be a lie.
 
 ## Ingest
 
@@ -56,7 +56,7 @@ db.commit()
 
 ## Arrange
 
-One pass per file, not per chunk. Send a short extract (filename + first chunk) and ask for JSON. `response_format` is enforced during decoding. Turn reasoning off on Qwen so the token budget is not spent thinking. GLM takes `response_format` too; keep a large `max_tokens` there because reasoning still bills as output.
+One pass per file, not per chunk. Send a short extract (filename + first chunk) and ask for JSON. `response_format` is enforced during decoding. Keep a large `max_tokens`: DeepSeek-V4.1-Flash reasons before the JSON and that reasoning bills as output.
 
 ```python
 ARRANGE = """You file a company corpus. Return JSON:
@@ -65,7 +65,7 @@ Use the filename and extract. Do not invent a title the extract does not support
 
 def arrange(path, extract):
     r = chat.chat.completions.create(
-        model="qwen/qwen3.8-27b",
+        model="deepseek-ai/deepseek-v4.1-flash",
         messages=[
             {"role": "system", "content": ARRANGE},
             {"role": "user", "content": f"filename: {path}\n\n{extract[:4000]}"},
@@ -125,7 +125,7 @@ def ask(question, k=20, n=6):
         f"[{i}] {h['path']}@{h['start']}\n{h['text']}" for i, h in enumerate(hits, 1)
     )
     r = chat.chat.completions.create(
-        model="qwen/qwen3.8-27b",
+        model="deepseek-ai/deepseek-v4.1-flash",
         messages=[
             {
                 "role": "system",
@@ -150,5 +150,4 @@ No recall@k, no PDF-parser bake-off, no claim that auto-topics match how your co
 ## Next
 
 - [Agent memory](./agent-memory.md) — the same retrieve loop, pointed at facts instead of files
-- Model cards: [Qwen3-Embedding-8B](/models/qwen3-embedding-8b), [Qwen3-Reranker-8B](/models/qwen3-reranker-8b), [Qwen3.8 27B](/models/qwen3-8)
-- [Quickstart](/quickstart) · [Docs](/docs)
+- [Try the deployment](https://tiyuvta.ai/services/try/) · [What tiyuvta deploys on your hardware](https://tiyuvta.ai/services/)
